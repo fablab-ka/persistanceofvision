@@ -2,7 +2,7 @@
 #include "motor.h"
 #include "led.h"
 //#include <stdlib.h>
-#include "font.cpp"
+#include "font.h"
 PovDisplay disp;
 
 //const int arr_size = 400;
