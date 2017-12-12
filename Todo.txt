@@ -1,0 +1,8 @@
+# Programming
+
+* Application Uhrzeit nachts anzeigen
+
+# Hardware
+
+* LED-Screen beidseitig festmachen, Platine daran anschrauben
+* Bessere Fluoreszenzfolie besorgen
