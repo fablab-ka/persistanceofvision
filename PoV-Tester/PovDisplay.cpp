@@ -14,25 +14,32 @@ PovDisplay::PovDisplay( uint8_t  LedData, uint8_t  LedClk, uint8_t  LedEna, uint
   _steps_per_pixel   = steps_per_pixel;
   _highlighted_steps = highlighted_steps;
   _column_offset     = column_offset;
-  _step_delay        = uint16_t() (rpm/60/STEPS_PER_ROTATION) + MILLIS_PER_STEP;
+  _step_delay        = uint16_t  (1000/(rpm*STEPS_PER_ROTATION/60)) + MILLIS_PER_STEP ;
   _motor_direction   = m_direction;
   _MotorStepState    = 0;
   _currPixelStep     = 0;
-  _bufsize           = sizeof(this._ringbuffer);
+  _bufsize           = sizeof(_ringbuffer);
+  mySelf             = this;
   pinMode(_pinLedData, OUTPUT);
   pinMode(_pinLedClk, OUTPUT);
   pinMode(_pinLedEna, OUTPUT);
   pinMode(_pinLedLatch, OUTPUT);
   digitalWrite(_pinLedEna, LOW);
   for (uint8_t i=0; i<4; i++) {
-    pinMode(this._motorPins[i], OUTPUT);
+    pinMode(_motorPins[i], OUTPUT);
   } 
-  os_timer_setfn(&myTimer, this.do_next_step, NULL);
+  _currBackStep = ( 3*_steps_per_pixel - _column_offset) % _steps_per_pixel;
+  _backstart = _bufsize - ((_column_offset+_steps_per_pixel-1) / _steps_per_pixel); 
+  Serial.print("Start  _backstart: ");Serial.print(_backstart);Serial.print("   _currBackStep: ");Serial.println(_currBackStep);
+  os_timer_setfn(&myTimer, callback_helper, NULL);
   start_rotating();
 }
 
+os_timer_t PovDisplay::myTimer;
+PovDisplay * PovDisplay::mySelf;
+
 void PovDisplay::start_rotating(){
-  os_timer_arm(&myTimer, this._step_delay, true);
+  os_timer_arm(&myTimer, _step_delay, true);
 }
 
 void PovDisplay::stop_rotating(){
@@ -40,28 +47,28 @@ void PovDisplay::stop_rotating(){
 }
 
 void PovDisplay::set_rotation(uint8_t dir){
-  this._motor_direction=dir;
+  _motor_direction=dir;
 }
 
 void PovDisplay::set_offset(uint8_t offset){
-  this._column_offset=offset;
+  _column_offset=offset;
 }
 
-void set_highlighted_steps(uint8_t stepcount){
-  this._highlighted_steps = min(stepcount, this._steps_per_pixel); //make sure, that there are not more highlited pixels than steps!
+void PovDisplay::set_highlighted_steps(uint8_t stepcount){
+  _highlighted_steps = min(stepcount, _steps_per_pixel); //make sure, that there are not more highlited pixels than steps!
 }
 
 void PovDisplay::set_speed(float rpm){
-  this._step_delay        = uint16_t() (rpm/60/STEPS_PER_ROTATION) + MILLIS_PER_STEP;
+  _step_delay        = uint16_t  (1000 / (rpm*STEPS_PER_ROTATION/60)) + MILLIS_PER_STEP ;
 }
 
 bool PovDisplay::set_next_column (uint8_t value){
   // store another column in ringbuffer, if ringbuffer has space left
   // return true, if storing was succesful, otherwise return false
-  if( (_bufend % _bufsize) != ((_bufstart+_bufsize-1) % _bufsize ) ) {
+  if( (_bufend % _bufsize) != ((_bufstart+_bufsize-2) % _bufsize ) ) {
     _ringbuffer[_bufend]=value;
     _bufend=(_bufend+1) % _bufsize;
-    _bufferfull=false
+    _bufferfull=false;
     return true;
   } else {
     return false;
@@ -69,37 +76,49 @@ bool PovDisplay::set_next_column (uint8_t value){
 }
 
 
-void PovDisplay::do_next_step() {
-  uint8_t backPixelStep = (3*this._steps_per_pixel + this._currPixelStep - this._column_offset) % this._steps_per_pixel;
-  uint8_t backPixelOffset = (this._column_offset+this._steps_per_pixel-this._currPixelStep) / this._steps_per_pixel;
+void PovDisplay::do_next_step( ) {
   uint8_t output = 0b00000000;
-  
-  if (this._currPixelStep <= this._highlighted_steps) {
-    output = (_ringbuffer[_this._bufstart] & 0b10101010)
+  if (_currPixelStep <= _highlighted_steps) {
+    output = (_ringbuffer[_bufstart] & 0b10101010);
+  } else {
+    output = output & 0b01010101;
   }
-  
-  if (backPixelStep <= this._highlighted_steps) {
-    output = output | (_ringbuffer[_this._bufstart-backPixelOffset] & 0b01010101)
+  if (_currBackStep <= _highlighted_steps) {
+    output = output | (_ringbuffer[_backstart] & 0b01010101);
+  } else {
+    output = output & 0b10101010;
   }
-  
   digitalWrite(LED_CLK, LOW);
   shiftOut(LED_DATA, LED_CLK, MSBFIRST, output);
   digitalWrite(LED_LATCH, HIGH);
   digitalWrite(LED_LATCH, LOW);
   
-  this._MotorStepState=(this._MotorStepState+8+motorDirection) % 8;
-  this._currPixelStep=(this._currPixelStep+1) % this._steps_per_pixel;
-  if (this._currPixelStep == 0 ) {
-    if(  this._bufstart !=  this._bufend ) {
-      this._bufstart=(this._bufstart+1) % this._bufsize
+  _MotorStepState=(_MotorStepState+8+_motor_direction) % 8;
+  _currPixelStep = (_currPixelStep+1) % _steps_per_pixel;
+  _currBackStep  = (_currBackStep+1)  % _steps_per_pixel;
+  if (_currPixelStep == 0 ) {
+    if(  _bufstart !=  _bufend ) {
+      _bufstart=(_bufstart+1) % _bufsize;
     } else {
-      this._bufferfull=true;
+      _bufferfull=true;
     }
   }
-  if (! this._bufferfull ) {
+  if ((_currBackStep == 0) &&(! _bufferfull) ) {
+      _backstart=(_backstart+1) % _bufsize;
+  }
+  if (! _bufferfull ) {
     for (uint8_t i=0; i<4; i++) {
-      digitalWrite(this._motorPins[i], bitRead(this._stepValues[this._currMotorStep],i));
+      digitalWrite(_motorPins[i], bitRead(_stepValues[_MotorStepState],i));
     } 
   }  
 }
+
+
+void PovDisplay::callback_helper(void *pArg) {
+    mySelf->do_next_step();
+}
+
+void PovDisplay::Debug_me(){
+  // put Debug output of private members here
+}  
 
