@@ -2,7 +2,7 @@
 
 PovDisplay::PovDisplay( uint8_t  LedData, uint8_t  LedClk, uint8_t  LedEna, uint8_t  LedLatch, 
             uint8_t  M_A1, uint8_t  M_A2, uint8_t  M_B1, uint8_t  M_B2, 
-            uint8_t spacer,  uint8_t steps_per_pixel, uint8_t highlighted_steps, uint8_t column_offset, 
+            uint8_t steps_per_pixel, uint8_t highlighted_steps, uint8_t column_offset, 
             float rpm, uint8_t m_direction) {
   _motorPins[0] = M_A1; _motorPins[1] = M_A2;
   _motorPins[2] = M_B1; _motorPins[3] = M_B2;
@@ -10,11 +10,10 @@ PovDisplay::PovDisplay( uint8_t  LedData, uint8_t  LedClk, uint8_t  LedEna, uint
   _pinLedClk         = LedClk;
   _pinLedEna         = LedEna;
   _pinLedLatch       = LedLatch;
-  _spacer            = spacer;
   _steps_per_pixel   = steps_per_pixel;
   _highlighted_steps = highlighted_steps;
   _column_offset     = column_offset;
-  _step_delay        = uint16_t  (1000/(rpm*STEPS_PER_ROTATION/60)) + MILLIS_PER_STEP ;
+  _step_delay        = uint16_t  (1000/(rpm*STEPS_PER_ROTATION/60))  ;
   _motor_direction   = m_direction;
   _MotorStepState    = 0;
   _currPixelStep     = 0;
@@ -30,7 +29,6 @@ PovDisplay::PovDisplay( uint8_t  LedData, uint8_t  LedClk, uint8_t  LedEna, uint
   } 
   _currBackStep = ( 3*_steps_per_pixel - _column_offset) % _steps_per_pixel;
   _backstart = _bufsize - ((_column_offset+_steps_per_pixel-1) / _steps_per_pixel); 
-  Serial.print("Start  _backstart: ");Serial.print(_backstart);Serial.print("   _currBackStep: ");Serial.println(_currBackStep);
   os_timer_setfn(&myTimer, callback_helper, NULL);
   start_rotating();
 }
@@ -50,16 +48,12 @@ void PovDisplay::set_rotation(uint8_t dir){
   _motor_direction=dir;
 }
 
-void PovDisplay::set_offset(uint8_t offset){
-  _column_offset=offset;
-}
-
 void PovDisplay::set_highlighted_steps(uint8_t stepcount){
   _highlighted_steps = min(stepcount, _steps_per_pixel); //make sure, that there are not more highlited pixels than steps!
 }
 
 void PovDisplay::set_speed(float rpm){
-  _step_delay        = uint16_t  (1000 / (rpm*STEPS_PER_ROTATION/60)) + MILLIS_PER_STEP ;
+  _step_delay        = uint16_t  (1000 / (rpm*STEPS_PER_ROTATION/60))  ;
 }
 
 bool PovDisplay::set_next_column (uint8_t value){
@@ -78,6 +72,7 @@ bool PovDisplay::set_next_column (uint8_t value){
 
 void PovDisplay::do_next_step( ) {
   uint8_t output = 0b00000000;
+  
   if (_currPixelStep <= _highlighted_steps) {
     output = (_ringbuffer[_bufstart] & 0b10101010);
   } else {
@@ -88,10 +83,10 @@ void PovDisplay::do_next_step( ) {
   } else {
     output = output & 0b10101010;
   }
-  digitalWrite(LED_CLK, LOW);
-  shiftOut(LED_DATA, LED_CLK, MSBFIRST, output);
-  digitalWrite(LED_LATCH, HIGH);
-  digitalWrite(LED_LATCH, LOW);
+  digitalWrite(_pinLedClk, LOW);
+  shiftOut(_pinLedData, _pinLedClk, MSBFIRST, output);
+  digitalWrite(_pinLedLatch, HIGH);
+  digitalWrite(_pinLedLatch, LOW);
   
   _MotorStepState=(_MotorStepState+8+_motor_direction) % 8;
   _currPixelStep = (_currPixelStep+1) % _steps_per_pixel;

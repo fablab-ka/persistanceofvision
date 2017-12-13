@@ -6,17 +6,7 @@
 #define CCW   1
 #define CW   -1
 #define STEPS_PER_ROTATION 4096  // steps needed for 360°
-#define MILLIS_PER_STEP  1       // time needed for outputting one row
 
-#define LED_DATA   D8
-#define LED_CLK    D6
-#define LED_ENABLE D7
-#define LED_LATCH  D0
-
-#define MOTOR_A1 D1
-#define MOTOR_A2 D2
-#define MOTOR_B1 D4
-#define MOTOR_B2 D3
 
 extern "C"
 {
@@ -28,15 +18,13 @@ class PovDisplay {
   public:
     PovDisplay( uint8_t  LedData, uint8_t  LedClk, uint8_t  LedEna, uint8_t  LedLatch, 
                 uint8_t  M_A1, uint8_t  M_A2, uint8_t  M_B1, uint8_t  M_B2, 
-                uint8_t spacer,  uint8_t steps_per_pixel, uint8_t highlighted_steps,  uint8_t column_offset, 
+                uint8_t steps_per_pixel, uint8_t highlighted_steps,  uint8_t column_offset, 
                 float rpm, uint8_t m_direction);
     static PovDisplay * mySelf;
     static os_timer_t myTimer;
-    uint8_t  _spacer;                                           // space between two characters
     void start_rotating();
     void stop_rotating();
     void set_rotation(uint8_t dir);
-    void set_offset(uint8_t offset);
     void set_highlighted_steps(uint8_t stepcount);
     void set_speed(float rpm);
     bool set_next_column (uint8_t value);
@@ -61,7 +49,6 @@ class PovDisplay {
     uint8_t  _bufsize;
     static void callback_helper(void *pArg);
     void do_next_step();                                   // function for ISR timer
-    void showLEDcol(uint8_t colData);
       
 };
 
