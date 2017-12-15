@@ -29,11 +29,14 @@ PovDisplay::PovDisplay( uint8_t  LedData, uint8_t  LedClk, uint8_t  LedEna, uint
   } 
   _currBackStep = ( 3*_steps_per_pixel - _column_offset) % _steps_per_pixel;
   _backstart = _bufsize - ((_column_offset+_steps_per_pixel-1) / _steps_per_pixel); 
-  os_timer_setfn(&myTimer, callback_helper, NULL);
+
+  
+  os_timer_setfn( &myTimer, callback_helper, NULL);
+
+  
   start_rotating();
 }
 
-os_timer_t PovDisplay::myTimer;
 PovDisplay * PovDisplay::mySelf;
 
 void PovDisplay::start_rotating(){
