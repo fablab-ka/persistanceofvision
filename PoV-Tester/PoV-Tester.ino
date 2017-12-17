@@ -25,12 +25,12 @@ void setup() {
 String message="PHABLABS 4.0 Fablab Karlsruhe ";
 
 void loop() {
-  for ( int i = 0; i < message.length(); i++) {
+  for ( uint8_t i = 0; i < message.length(); i++) {
     //Serial.println(i);
-    for ( int j = 0; j < FONTCOLS; j++) {
+    for ( uint8_t j = 0; j < FONTCOLS; j++) {
         while ( not myDisp.set_next_column(font[message.charAt(i)][j])) {yield();};
     }
-    for(int j = 0; j < SPACER; j++) {
+    for(uint8_t j = 0; j < SPACER; j++) {
       while (not myDisp.set_next_column(0)) {yield();};
     }
   }

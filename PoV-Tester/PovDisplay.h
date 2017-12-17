@@ -20,7 +20,6 @@ class PovDisplay {
                 uint8_t  M_A1, uint8_t  M_A2, uint8_t  M_B1, uint8_t  M_B2, 
                 uint8_t steps_per_pixel, uint8_t highlighted_steps,  uint8_t column_offset, 
                 float rpm, uint8_t m_direction);
-    static PovDisplay * mySelf;
     os_timer_t myTimer;
     void start_rotating();
     void stop_rotating();
@@ -47,7 +46,7 @@ class PovDisplay {
     volatile uint8_t  _bufend=1;                                // pointer to buffer end
     volatile bool _bufferfull=false;
     uint8_t  _bufsize;
-    static void callback_helper(void *pArg);
+    static void _callback_helper(void *pArg);
     void do_next_step();                                   // function for ISR timer
       
 };
