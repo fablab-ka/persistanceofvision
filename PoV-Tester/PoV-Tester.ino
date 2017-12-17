@@ -28,7 +28,7 @@ void loop() {
   for ( uint8_t i = 0; i < message.length(); i++) {
     //Serial.println(i);
     for ( uint8_t j = 0; j < FONTCOLS; j++) {
-        while ( not myDisp.set_next_column(font[message.charAt(i)][j])) {yield();};
+        while ( not myDisp.set_next_column( font[(uint8_t)message.charAt(i)][j])) {yield();};
     }
     for(uint8_t j = 0; j < SPACER; j++) {
       while (not myDisp.set_next_column(0)) {yield();};
