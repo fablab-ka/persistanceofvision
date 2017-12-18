@@ -46,7 +46,6 @@ class PovDisplay {
     volatile uint8_t  _bufend=1;                                // pointer to buffer end
     volatile bool _bufferfull=false;
     uint8_t  _bufsize;
-    static void _callback_helper(void *pArg);
     void do_next_step();                                   // function for ISR timer
       
 };

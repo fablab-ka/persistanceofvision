@@ -1,4 +1,5 @@
 #include "PovDisplay.h"
+#include <Arduino.h>
 #include "font.h"
 
 #define LED_DATA   D8
@@ -18,6 +19,8 @@ PovDisplay myDisp(LED_DATA, LED_CLK, LED_ENABLE, LED_LATCH,
                   MOTOR_A1, MOTOR_B1, MOTOR_A2, MOTOR_B2, 
                   26, 18, 50, 2, CW);
  
+
+
 void setup() {
   Serial.begin(115200);
 }

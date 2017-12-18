@@ -29,9 +29,10 @@ PovDisplay::PovDisplay( uint8_t  LedData, uint8_t  LedClk, uint8_t  LedEna, uint
   } 
   _currBackStep = ( 3*_steps_per_pixel - _column_offset) % _steps_per_pixel;
   _backstart = _bufsize - ((_column_offset+_steps_per_pixel-1) / _steps_per_pixel); 
-  os_timer_setfn( &myTimer, _callback_helper, this);
+  os_timer_setfn( &myTimer, [](void *pArg){PovDisplay *currClass = static_cast<PovDisplay*>(pArg);currClass->do_next_step();}, this);
   start_rotating();
 }
+
 
 
 void PovDisplay::start_rotating(){
@@ -47,7 +48,7 @@ void PovDisplay::set_rotation(uint8_t dir){
 }
 
 void PovDisplay::set_highlighted_steps(uint8_t stepcount){
-  _highlighted_steps = min(stepcount, _steps_per_pixel); //make sure, that there are not more highlited pixels than steps!
+  _highlighted_steps = _min(stepcount, _steps_per_pixel); //make sure, that there are not more highlited pixels than steps!
 }
 
 void PovDisplay::set_speed(float rpm){
@@ -104,12 +105,6 @@ void PovDisplay::do_next_step( ) {
       digitalWrite(_motorPins[i], bitRead(_stepValues[_MotorStepState],i));
     } 
   }  
-}
-
-
-void PovDisplay::_callback_helper(void *pArg) {
-    PovDisplay *currClass = static_cast<PovDisplay*>(pArg);
-    currClass->do_next_step();
 }
 
 
