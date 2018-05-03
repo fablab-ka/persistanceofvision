@@ -1,65 +1,43 @@
 #include "PovDisplay.h"
-#include "motor.h"
-#include "led.h"
-//#include <stdlib.h>
-#include "font.cpp"
-PovDisplay disp;
+#include <Arduino.h>
+#include "font.h"
 
-//const int arr_size = 400;
-//uint8_t arr[arr_size];
+#define LED_DATA   D8
+#define LED_CLK    D6
+#define LED_ENABLE D7
+#define LED_LATCH  D0
+
+#define MOTOR_A1 D1
+#define MOTOR_A2 D2
+#define MOTOR_B1 D4
+#define MOTOR_B2 D3
+
+#define SPACER 1
+
+
+PovDisplay myDisp(LED_DATA, LED_CLK, LED_ENABLE, LED_LATCH, 
+                  MOTOR_A1, MOTOR_B1, MOTOR_A2, MOTOR_B2, 
+                  26, 18, 50, 2, CW);
+ 
+
 
 void setup() {
-  delay(1000);
-  Motor::init();
-  initLEDs();
   Serial.begin(115200);
-//  for (int i = 0; i < arr_size; i++)
-//    arr[i] = 1 << (i % 8);
-  showLEDs(255);
-  PovDisplay disp = PovDisplay();
-  //disp.display2(font[35], 5);
-  disp.show_text("12345");
 }
 
-int IntToBitColumn(int zahl);
+String message="PHABLABS 4.0 Fablab Karlsruhe ";
 
 void loop() {
-  //  int an,aus,versatz,n;
-  //
-  //  for( an=1; an<42; an++) {
-  //    n=IntToBitColumn(an); // n number of columns to display
-  //    PovDisplay disp(3, 4, 26);  // PovDisplay::PovDisplay(int led_on, int led_off)
-  //    disp.display(n, 200, array);  // PovDisplay::display(int arr_len, int wait_after, uint8_t *arr)
-  //  }
+  for ( uint8_t i = 0; i < message.length(); i++) {
+    //Serial.println(i);
+    for ( uint8_t j = 0; j < FONTCOLS; j++) {
+        while ( not myDisp.set_next_column( font[(uint8_t)message.charAt(i)][j])) {yield();};
+    }
+    for(uint8_t j = 0; j < SPACER; j++) {
+      while (not myDisp.set_next_column(0)) {yield();};
+    }
+  }
 }
 
-
-//int IntToBitColumn(int zahl) {
-//   int n;
-//   const int zwischenraum=3;
-//   int ziffern[5];
-//   int i=0;
-//   while (zahl>0) {
-//     ziffern[++i]= zahl % 10;
-//     zahl = zahl / 10;
-//   }
-//   n= (8+zwischenraum)*i;
-//   int ax=0;
-//   for(int z=i; z>0; z--) {
-//    //Serial.print("ziffern "); Serial.print(z); Serial.print(" "); Serial.println(ziffern[z]);
-//    for(int col=0; col<8; col++ ) {
-//      array[ax++]= font [ziffern[z]][col];
-//    }
-//    //Serial.println(ax);
-//    for (int col=0; col<zwischenraum; col++) {
-//      array[ax++]= 0;
-//    }
-//   }
-//
-//   return(n);
-//}
-
-
-//
 
 
