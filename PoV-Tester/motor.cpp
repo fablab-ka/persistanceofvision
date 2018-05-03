@@ -6,8 +6,8 @@ extern "C" {
 #include "PovDisplay.h"
 
 #define A1 D1
-#define A2 D2
-#define B1 D4
+#define A2 D4
+#define B1 D2
 #define B2 D3
 
 namespace Motor {
