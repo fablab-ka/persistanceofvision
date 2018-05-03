@@ -3,10 +3,10 @@
 
 #include "Arduino.h"
 
-#define LED_DATA   D8
+#define LED_DATA   D0
 #define LED_CLK    D6
-#define LED_ENABLE D7
-#define LED_LATCH  D0
+#define LED_ENABLE D8
+#define LED_LATCH  D7
 
 static void initLEDs() {
   pinMode(LED_DATA, OUTPUT);
